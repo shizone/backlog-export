@@ -1,0 +1,17 @@
+{
+  "name": "backlog-export",
+  "version": "0.0.1",
+  "description": "export backlog wiki and issue",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Yuuki Sumida",
+  "license": "ISC",
+  "dependencies": {
+    "fs-extra": "^8.0.1",
+    "lodash": "^4.17.11",
+    "node-fetch": "^2.2.0",
+    "request": "^2.88.0"
+  }
+}
