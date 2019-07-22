@@ -56,37 +56,37 @@ async function export_wiki_attachments(wiki_id, wiki_name, attachments) {
 }
 
 async function get_issues() {
-  const endpoint = `${env.backlog_host}api/v2/issues?apiKey=${env.api_key}&projectId[0]=${env.project_id}`
+  const endpoint = `${env.backlog_host}api/v2/issues?apiKey=${env.api_key}&projectId[0]=${env.project_id}&count=100`
   return await fetch(endpoint).then(res => res.json())
 }
 
 async function export_issues(issues) {
   for (let issue of issues) {
-    fs.writeFile(`issue/${issue.issueKey}.json`, JSON.stringify(issue), function (err) {
+    const summary = issue.summary.replace(' ', '').replace(':', '：')
+    fs.writeFile(`issue/${issue.issueKey}_${summary}.json`, JSON.stringify(issue), function (err) {
       if (err) {
         console.log(err)
       }
     })
-    fs.mkdirpSync('issue/' + issue.issueKey)
-    fs.writeFile(`issue/${issue.issueKey}/description.md`, issue.description, function (err) {
+    fs.mkdirpSync(`issue/${issue.issueKey}_${summary}`)
+    fs.writeFile(`issue/${issue.issueKey}_${summary}/description.md`, issue.description, function (err) {
       if (err) {
         console.log(err)
       }
     })
-    await export_issue_comments(issue.issueKey)
+    await export_issue_comments(issue.issueKey, summary)
     if (issue.attachments.length > 0) {
-      await export_issue_attachments(issue.issueKey, issue.attachments)
+      await export_issue_attachments(issue.issueKey, summary, issue.attachments)
     }
   }
 }
 
-async function export_issue_comments(issue_key) {
-  fs.mkdirpSync('issue/' + issue_key)
+async function export_issue_comments(issue_key, summary) {
+  fs.mkdirpSync(`issue/${issue_key}_${summary}`)
   const endpoint = `${env.backlog_host}api/v2/issues/${issue_key}/comments?apiKey=${env.api_key}`
   const comments = await fetch(endpoint).then(res => res.json())
   if (comments.length > 0) {
-    fs.mkdirpSync('issue/' + issue_key + '/comments/')
-    fs.writeFile(`issue/${issue_key}/comments.json`, JSON.stringify(comments), function (err) {
+    fs.writeFile(`issue/${issue_key}_${summary}/comments.json`, JSON.stringify(comments), function (err) {
       if (err) {
         console.log(err)
       }
@@ -94,15 +94,15 @@ async function export_issue_comments(issue_key) {
   }
 }
 
-async function export_issue_attachments(issue_key, attachments) {
-  fs.mkdirpSync('issue/' + issue_key)
+async function export_issue_attachments(issue_key, summary, attachments) {
+  fs.mkdirpSync(`issue/${issue_key}_${summary}`)
   for (let attachment of attachments) {
     const endpoint = `${env.backlog_host}api/v2/issues/${issue_key}/attachments/${attachment.id}?apiKey=${env.api_key}`
     request.get(endpoint, {encoding: null}, (err, response, body) => {
       if (err) {
         console.log(err);
       } else {
-        fs.writeFile(`issue/${issue_key}/${attachment.name}`, body, function (err) {
+        fs.writeFile(`issue/${issue_key}_${summary}/${attachment.name}`, body, function (err) {
           if (err) {
             console.log(err);
           }
